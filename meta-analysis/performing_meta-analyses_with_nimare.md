@@ -92,7 +92,7 @@ import nimare
 ```
 
 ```python
-DATA_DIR = op.abspath("data/")
+DATA_DIR = op.expanduser("~/data/meta-analysis/")
 ```
 
 # Basics of NiMARE datasets
@@ -103,8 +103,13 @@ NiMARE relies on a specification for meta-analytic datasets named [NIMADS](https
 
 We will start by loading a dataset in NIMADS format, because this particular dataset contains both coordinates and images. This dataset is created from [Collection 1425 on NeuroVault](https://identifiers.org/neurovault.collection:1425), which contains [NIDM-Results packs](http://nidm.nidash.org/specs/nidm-results_130.html) for 21 pain studies.
 
+**NOTE**: The images in this Dataset have a different field of view than the default MNI mask NiMARE uses, so we must use a Dataset-specific mask.
+
 ```python
-pain_dset = nimare.dataset.Dataset(op.join(DATA_DIR, "nidm_pain_dset.json"))
+pain_dset = nimare.dataset.Dataset(
+    op.join(DATA_DIR, "nidm_pain_dset.json"),
+    mask=op.join(DATA_DIR, "pain_dset_mask.nii.gz"),
+)
 
 # In addition to loading the NIMADS-format JSON file,
 # we need to download the associated statistical images from NeuroVault,
@@ -114,6 +119,8 @@ dset_dir = nimare.extract.download_nidm_pain(data_dir=DATA_DIR)
 # We then notify the Dataset about the location of the images,
 # so that the *relative paths* in the Dataset can be used to determine *absolute paths*.
 pain_dset.update_path(dset_dir)
+
+print(pain_dset)
 ```
 
 In NiMARE, datasets are stored in a special `Dataset` class. The `Dataset` class stores most relevant information as properties.
@@ -188,12 +195,12 @@ ns_dset = nimare.io.convert_neurosynth_to_dataset(
 
 ```python
 ns_dset = nimare.dataset.Dataset.load(op.join(DATA_DIR, "neurosynth_dataset.pkl.gz"))
-print(f"There are {len(ns_dset.ids)} studies in the Neurosynth database.")
+print(ns_dset)
 ```
 
 ```python
 sleuth_dset = nimare.io.convert_sleuth_to_dataset(op.join(DATA_DIR, "sleuth_dataset.txt"))
-print(f"There are {len(sleuth_dset.ids)} studies in this dataset.")
+print(sleuth_dset)
 ```
 
 ## Searching large datasets
@@ -207,7 +214,7 @@ The `slice` method creates a reduced `Dataset` from a list of IDs.
 ```python
 pain_ids = ns_dset.get_studies_by_label("Neurosynth_TFIDF__pain", label_threshold=0.001)
 ns_pain_dset = ns_dset.slice(pain_ids)
-print(f"There are {len(pain_ids)} studies labeled with 'pain'.")
+print(ns_pain_dset)
 ```
 
 A MACM (meta-analytic coactivation modeling) analysis is generally performed by running a meta-analysis on studies with a peak in a region of interest, so Dataset includes two methods for searching based on the locations of coordinates: `Dataset.get_studies_by_coordinate` and `Dataset.get_studies_by_mask`.
@@ -215,7 +222,7 @@ A MACM (meta-analytic coactivation modeling) analysis is generally performed by 
 ```python
 sphere_ids = ns_dset.get_studies_by_coordinate([[24, -2, -20]], r=6)
 sphere_dset = ns_dset.slice(sphere_ids)
-print(f"There are {len(sphere_ids)} studies with at least one peak within 6mm of [24, -2, -20].")
+print(sphere_dset)
 ```
 
 # Running meta-analyses
@@ -266,6 +273,10 @@ meta_results = meta.fit(pain_dset)
 ```
 
 ```python
+print(meta)
+```
+
+```python
 print(type(meta_results))
 ```
 
@@ -295,6 +306,13 @@ Most of the time, you will want to follow up your meta-analysis with some form o
 In addition to generic multiple comparisons correction, the Correctors also reference algorithm-specific correction methods, such as the `montecarlo` method supported by most coordinate-based meta-analysis algorithms.
 
 Correctors are initialized with parameters, and they have a `transform` method that accepts a `MetaResult` object and returns an updated one with the corrected maps.
+
+
+You can use the class method `inspect` to determine what multiple comparisons correction methods are available for a given `MetaResult`.
+
+```python
+nimare.correct.FWECorrector.inspect(meta_results)
+```
 
 ```python
 mc_corrector = nimare.correct.FWECorrector(
@@ -358,6 +376,19 @@ The `DerSimonianLaird` method uses "beta" and "varcope" images, and estimates be
 ```python
 meta = nimare.meta.ibma.DerSimonianLaird()
 meta_results = meta.fit(pain_dset)
+```
+
+```python
+import nibabel as nib
+img = nib.load("/Users/taylor/data/meta-analysis/nidm_21pain/pain_07.nidm/Contrast.nii.gz")
+```
+
+```python
+pain_dset.masker.mask_img.affine
+```
+
+```python
+img.affine
 ```
 
 ```python
@@ -479,6 +510,21 @@ decoder = nimare.decode.discrete.NeurosynthDecoder(correction=None)
 decoder.fit(ns_dset)
 decoded_df = decoder.transform(ids=label_ids)
 decoded_df.sort_values(by="probReverse", ascending=False).head(10)
+```
+
+In addition to the two above decoders, we have an ROIAssociationDecoder, which does the following:
+
+1. Generate modeled activation (MA) maps for all studies in Dataset. 
+2. Average MA values within user-provided mask to get study-wise MA regressor. 
+3. Correlate MA regressor with study-wise annotation values (e.g., tf-idf values).
+
+```python
+decoder = nimare.decode.discrete.ROIAssociationDecoder(
+    masker=op.join(DATA_DIR, "amygdala_roi.nii.gz")
+)
+decoder.fit(ns_dset)
+decoded_df = decoder.transform()
+decoded_df.sort_values(by="r", ascending=False).head(10)
 ```
 
 # Exercise: Run a MACM and Decode an ROI
