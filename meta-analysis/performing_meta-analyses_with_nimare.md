@@ -371,24 +371,11 @@ pain_dset.images.head()
 
 Now that we have all of the image types we will need for our meta-analyses, we can run a couple of image-based meta-analysis types.
 
-The `DerSimonianLaird` method uses "beta" and "varcope" images, and estimates between-study variance (a.k.a. $\tau^2$).
+The `Hedges` method uses "beta" and "varcope" images, and estimates between-study variance (a.k.a. $\tau^2$) using the method described in Hedges & Olkin (1985).
 
 ```python
-meta = nimare.meta.ibma.DerSimonianLaird()
+meta = nimare.meta.ibma.Hedges()
 meta_results = meta.fit(pain_dset)
-```
-
-```python
-import nibabel as nib
-img = nib.load("/Users/taylor/data/meta-analysis/nidm_21pain/pain_07.nidm/Contrast.nii.gz")
-```
-
-```python
-pain_dset.masker.mask_img.affine
-```
-
-```python
-img.affine
 ```
 
 ```python
