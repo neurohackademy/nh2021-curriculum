@@ -68,7 +68,7 @@ commit the file and push these changes to GitHub:
 
 ```
 $ cd git-papers 			# Switch to the 'git-papers' directory
-$ vim journal.md		# Add figures section
+$ nano journal.md		# Add figures section
 $ git add journal.md
 $ git commit -m "Add figures"
 $ git push
@@ -126,7 +126,7 @@ but this time starting with changes in the *nha-papers* folder
 Let's write the conclusions:
 
 ```
-$ vim journal.md		# Write Conclusions
+$ nano journal.md		# Write Conclusions
 $ git add journal.md
 $ git commit -m "Write Conclusions" journal.md
 $ git push origin master
@@ -181,7 +181,7 @@ because we haven't yet updated our local branch using `git pull`.
 
 ```
 $ cd ../nha-papers		# Switch directory to other copy of our repository
-$ vim journal.md		# Change order of the authors
+$ nano journal.md		# Change order of the authors
 $ git add journal.md
 $ git commit -m "Change the first author" journal.md
 $ git push origin master
@@ -255,7 +255,7 @@ merging the branches.
 We edit the file. Then commit our changes. Now, if we *push* ...
 
 ```
-$ vim journal.md		# Edit file to resolve merge conflict
+$ nano journal.md		# Edit file to resolve merge conflict
 $ git add journal.md		# Stage the file
 $ git commit			# Commit to mark the conflict as resolved
 $ git push origin master

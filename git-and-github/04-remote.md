@@ -51,27 +51,6 @@ Let's get back to our tutorial. We'll first need a GitHub account.
 
 [Sign up](https://GitHub.com) or [sign in](https://GitHub.com) if you already have an account.
 
-### Generate an ssh key for access to GitHub:
-
-We will assume that you are doing this in the NeuroHackademy Jupyterhub, which
-runs the Linux operating system. If you are doing this on another operating system
-you can find instructions
-[here](https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
-
-Start by generating a key:
-
-    ssh-keygen -t ed25519 -C "your_email@example.com"
-
-Save the file to its default location and protect it with a password. Then:
-
-    eval "$(ssh-agent -s)"
-    ssh-add ~/.ssh/id_ed25519
-
-To add this key to your ssh configuration.
-
-Next, we go to GitHub to add this key to your account, proceed to [https://github.com/settings/keys](https://github.com/settings/keys).
-We copy the contents of the public key: `less ~/.ssh/id_ed25519.pub` into a new ssh key entry, and name it so we remember what this is for (e.g., "NeuroHackademy Jupyterhub").
-
 ### Create a new repository
 
 Now, we can create a repository on GitHub,
@@ -88,12 +67,38 @@ our local repository and we will be *pushing* it to GitHub,
 so we can do the following:
 
 ```
-$ git remote add origin git@github.com:<USERNAME>/git-papers.git
+$ git remote add origin https://github.com/<USERNAME>/git-papers.git
 ```
 {: .language-bash}
 
 This line sets up an alias `origin`,
 to correspond to the URL of our new repository on GitHub.
+
+### Generating an ssh key for access to GitHub:
+
+To be able to push changes to GitHub, you will need to generate an ssh key and upload the public part of that key to GitHub. This will allow your computer and GitHub to recognize each other.
+
+Start by generating a key:
+```
+ssh-keygen -t ed25519 -C "your_email@example.com"
+```
+{: .language-bash}
+
+Save the file to its default location and protect it with a password. Then:
+
+```
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+```
+{: .language-bash}
+
+
+To add this key to your ssh configuration.
+
+Next, we go to GitHub to add this key to your account, proceed to [https://github.com/settings/keys](https://github.com/settings/keys).
+
+We copy the contents of the public key: `less ~/.ssh/id_ed25519.pub` into a new ssh key entry (name it so we remember it). Now, we are ready to push our work to a remote repository.
+
 
 ### Push locally tracked files to a remote repository
 
@@ -215,7 +220,7 @@ So, let's make some changes to our files and commit these.
 
 ```
 $ git checkout master				# We'll continue working on the master branch
-$ vim journal.md				# Add results section
+$ nano journal.md				# Add results section
 $ git add journal.md				# Stage changes
 $ git commit
 ```
